@@ -762,6 +762,12 @@ function normalizeZone(zone: string | Zone): Zone {
     return FixedOffsetZone.instance(0);
   }
 
+  if (!IANAZone.isValidZone(name)) {
+    // moment-timezone has no data for unknown names (e.g. 'default') and leaves the moment in UTC
+    // instead of producing an invalid date
+    return FixedOffsetZone.parseSpecifier(name) ?? FixedOffsetZone.instance(0);
+  }
+
   let normalized = easyTzZoneCache.get(name);
 
   if (!normalized) {
@@ -1030,6 +1036,12 @@ class MomentCompat implements MomentLike {
   tz(zone?: string, keepLocalTime = false): string | undefined | MomentLike {
     if (zone == null) {
       return this._dt.zoneName ?? undefined;
+    }
+
+    // moment-timezone keeps the moment unchanged when it has no data for the zone
+    const name = normalizeZoneName(zone);
+    if (name !== 'UTC' && !IANAZone.isValidZone(name) && !FixedOffsetZone.parseSpecifier(name)) {
+      return this;
     }
 
     return this._setDt(this._dt.setZone(normalizeZone(zone), { keepLocalTime }));
