@@ -241,7 +241,8 @@ export const groupToNestedTable: DataTransformerInfo<
             for (const aggregation of aggregations) {
               const aggregationField: Field = {
                 name: `${fieldName} (${aggregation})`,
-                values: valuesByAggregation[aggregation],
+                // there are no groups (and therefore no aggregated values) when the frame has no rows
+                values: valuesByAggregation[aggregation] ?? [],
                 type: FieldType.other,
                 config: {},
               };
